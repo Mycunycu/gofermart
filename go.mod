@@ -8,4 +8,5 @@ require (
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/jackc/pgx/v4 v4.15.0
+	golang.org/x/crypto v0.0.0-20220312131142-6068a2e6cfdc // indirect
 )

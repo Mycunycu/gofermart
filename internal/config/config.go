@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	ServerAddress string `env:"SERVER_ADDRESS" envDefault:":8080"`
-	DatabaseDSN   string `env:"DATABASE_DSN" envDefault:"postgres://user:123@localhost:5432/gofermart?sslmode=disable"`
-	MigrationPath string `env:"MIGRATION_PATH" envDefault:"file://internal/repository/migrations"`
+	ServerAddress  string `env:"RUN_ADDRESS" envDefault:":8080"`
+	DatabaseURI    string `env:"DATABASE_URI" envDefault:"postgres://user:123@localhost:5432/gofermart?sslmode=disable"`
+	AccrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	MigrationPath  string `env:"MIGRATION_PATH" envDefault:"file://internal/repository/migrations"`
 }
 
 var cfg Config
@@ -36,7 +37,12 @@ func initialize() {
 		})
 
 		flag.Func("d", "database url", func(value string) error {
-			cfg.DatabaseDSN = value
+			cfg.DatabaseURI = value
+			return nil
+		})
+
+		flag.Func("r", "accrual system address", func(value string) error {
+			cfg.AccrualAddress = value
 			return nil
 		})
 

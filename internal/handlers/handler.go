@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
+	"github.com/Mycunycu/gofermart/internal/models"
 	"github.com/Mycunycu/gofermart/internal/services"
 )
 
@@ -18,12 +21,28 @@ func NewHandler(userSvc services.UserService) *Handler {
 
 func (h *Handler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, cancel := context.WithTimeout(r.Context(), time.Second*5)
+		ctx, cancel := context.WithTimeout(r.Context(), time.Second*5)
 		defer cancel()
 
-		w.Header().Set("content-type", "text/html; charset=UTF-8")
-		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(""))
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var req models.RegisterRequest
+		err = json.Unmarshal(body, &req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = h.userSvc.Register(ctx, req)
+		if err != nil {
+			//
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

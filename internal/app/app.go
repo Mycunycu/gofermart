@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -17,7 +16,6 @@ import (
 	"github.com/Mycunycu/gofermart/internal/routes"
 	"github.com/Mycunycu/gofermart/internal/server"
 	"github.com/Mycunycu/gofermart/internal/services"
-	"github.com/golang-migrate/migrate"
 )
 
 func Run() error {
@@ -26,7 +24,7 @@ func Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	db, err := repository.NewDatabase(ctx, cfg.DatabaseDSN)
+	db, err := repository.NewDatabase(ctx, cfg.DatabaseURI)
 	if err != nil {
 		return fmt.Errorf("error db connection: %v", err)
 	}
@@ -34,9 +32,7 @@ func Run() error {
 
 	err = db.Migrate(cfg.MigrationPath)
 	if err != nil {
-		if !errors.Is(err, migrate.ErrNoChange) {
-			return err
-		}
+		return err
 	}
 
 	userSvc := services.NewUserService(db)

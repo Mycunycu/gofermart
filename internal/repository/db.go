@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Mycunycu/gofermart/internal/models"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -46,6 +47,17 @@ func (d *Database) Migrate(source string) error {
 		return err
 	}
 	if err := m.Up(); err != nil {
+		if !errors.Is(err, migrate.ErrNoChange) {
+			return err
+		}
+	}
+	return nil
+}
+
+func (d *Database) Save(ctx context.Context, e models.RegisterRequest) error {
+	sql := "INSERT INTO customer VALUES (default, $1, $2)"
+	_, err := d.Exec(ctx, sql, e.Login, e.Password)
+	if err != nil {
 		return err
 	}
 	return nil
