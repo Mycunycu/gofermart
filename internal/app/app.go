@@ -16,10 +16,12 @@ import (
 	"github.com/Mycunycu/gofermart/internal/routes"
 	"github.com/Mycunycu/gofermart/internal/server"
 	"github.com/Mycunycu/gofermart/internal/services"
+	"github.com/go-chi/jwtauth/v5"
 )
 
 func Run() error {
 	cfg := config.New()
+	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -37,8 +39,8 @@ func Run() error {
 
 	userSvc := services.NewUserService(db)
 
-	handler := handlers.NewHandler(userSvc)
-	router := routes.NewRouter(handler)
+	handler := handlers.NewHandler(userSvc, tokenAuth)
+	router := routes.NewRouter(handler, tokenAuth)
 	srv := server.NewServer(ctx, cfg.ServerAddress, router)
 
 	go func() {

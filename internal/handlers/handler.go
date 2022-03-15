@@ -3,20 +3,25 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/Mycunycu/gofermart/internal/helpers"
 	"github.com/Mycunycu/gofermart/internal/models"
 	"github.com/Mycunycu/gofermart/internal/services"
+	"github.com/go-chi/jwtauth/v5"
 )
 
 type Handler struct {
-	userSvc services.UserService
+	userSvc   services.UserService
+	tokenAuth *jwtauth.JWTAuth
 }
 
-func NewHandler(userSvc services.UserService) *Handler {
-	return &Handler{userSvc: userSvc}
+func NewHandler(userSvc services.UserService, tokenAuth *jwtauth.JWTAuth) *Handler {
+	return &Handler{userSvc: userSvc, tokenAuth: tokenAuth}
 }
 
 func (h *Handler) Register() http.HandlerFunc {
@@ -39,9 +44,22 @@ func (h *Handler) Register() http.HandlerFunc {
 
 		err = h.userSvc.Register(ctx, req)
 		if err != nil {
-			//
+			if errors.Is(err, helpers.ErrUnique) {
+				http.Error(w, err.Error(), http.StatusConflict)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			return
 		}
 
+		_, tokenString, err := h.tokenAuth.Encode(models.UserClaims{"login": req.Login})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
 		w.WriteHeader(http.StatusOK)
 	}
 }

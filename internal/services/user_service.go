@@ -2,9 +2,13 @@ package services
 
 import (
 	"context"
+	"errors"
 
+	"github.com/Mycunycu/gofermart/internal/helpers"
 	"github.com/Mycunycu/gofermart/internal/models"
 	"github.com/Mycunycu/gofermart/internal/repository"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,8 +31,9 @@ func (u *UserSvc) Register(ctx context.Context, user models.RegisterRequest) err
 	user.Password = string(hashed)
 
 	err = u.db.Save(ctx, user)
-	if err != nil {
-		//
+	var targetErr *pgconn.PgError
+	if errors.As(err, &targetErr) && targetErr.Code == pgerrcode.UniqueViolation {
+		return helpers.ErrUnique
 	}
 
 	return nil
